@@ -18,20 +18,21 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Activate the virtual environment for subsequent RUN commands
-ENV VIRTUAL_ENV=/app/.venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
 # Install PyTorch CPU version first (to avoid CUDA dependencies)
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu
 
-# Copy requirements (excluding torch/torchaudio since we installed them above)
-COPY requirements.txt ./
+# Install app dependencies
 RUN pip install --no-cache-dir fastapi uvicorn[standard] python-dotenv python-multipart requests psutil pydub sse-starlette
 
-# Install chatterbox-tts — with the breaking fix (pkuseg package exclusion) 
-RUN pip install git+https://github.com/travisvn/chatterbox-multilingual.git@exp
+# Install chatterbox-tts WITHOUT re-pulling CUDA torch (~8GB saving)
+RUN pip install --no-cache-dir --no-deps git+https://github.com/travisvn/chatterbox-multilingual.git@exp && \
+    pip install --no-cache-dir \
+    transformers diffusers safetensors huggingface-hub \
+    librosa soundfile scipy numpy \
+    conformer einops s3tokenizer \
+    pykakasi jaconv resemble-perth \
+    gradio tqdm rich typer
 
 # Copy application code
 COPY app/ ./app/
