@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  chatterbox-tts:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.cpu
+    restart: unless-stopped
+    ports:
+      - '4123:4123'
+    environment:
+      - PORT=4123
+      - HOST=0.0.0.0
+      - EXAGGERATION=0.5
+      - CFG_WEIGHT=0.5
+      - TEMPERATURE=0.8
+      - MAX_CHUNK_LENGTH=280
+      - MAX_TOTAL_LENGTH=3000
+      - LONG_TEXT_DATA_DIR=/data/long_text_jobs
+      - LONG_TEXT_MAX_LENGTH=100000
+      - LONG_TEXT_CHUNK_SIZE=2500
+      - LONG_TEXT_SILENCE_PADDING_MS=200
+      - LONG_TEXT_JOB_RETENTION_DAYS=7
+      - LONG_TEXT_MAX_CONCURRENT_JOBS=3
+      - DEVICE=cpu
+      - MODEL_CACHE_DIR=/cache
+      - VOICE_LIBRARY_DIR=/voices
+      - MEMORY_CLEANUP_INTERVAL=5
+      - CUDA_CACHE_CLEAR_INTERVAL=3
+      - ENABLE_MEMORY_MONITORING=true
+      - OMP_NUM_THREADS=3
+      - MKL_NUM_THREADS=3
+      - NUMEXPR_NUM_THREADS=3
+    volumes:
+      - chatterbox-models:/cache
+      - chatterbox-voices:/voices
+      - chatterbox-longtext-data:/data/long_text_jobs
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4123/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+
+volumes:
+  chatterbox-models:
+  chatterbox-voices:
+  chatterbox-longtext-data:
