@@ -18,9 +18,9 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Install PyTorch CPU version first (to avoid CUDA dependencies)
+# Install PyTorch CPU version (pin to 2.6.0 for torchaudio compatibility)
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+    pip install --no-cache-dir torch==2.6.0+cpu torchaudio==2.6.0+cpu --index-url https://download.pytorch.org/whl/cpu
 
 # Install app dependencies
 RUN pip install --no-cache-dir fastapi uvicorn[standard] python-dotenv python-multipart requests psutil pydub sse-starlette
@@ -33,6 +33,10 @@ RUN pip install --no-cache-dir --no-deps git+https://github.com/travisvn/chatter
     conformer einops s3tokenizer \
     pykakasi jaconv resemble-perth \
     gradio tqdm rich typer
+
+# Fix: sdpa attention is incompatible with output_attentions on CPU
+RUN sed -i 's/attn_implementation="sdpa"/attn_implementation="eager"/' \
+    /usr/local/lib/python3.11/site-packages/chatterbox/models/t3/llama_configs.py
 
 # Copy application code
 COPY app/ ./app/
