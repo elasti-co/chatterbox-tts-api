@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   chatterbox-tts:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.cpu
+    image: ghcr.io/elasti-co/chatterbox-tts-api:cpu
     restart: unless-stopped
     ports:
       - '4123:4123'
